@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian HSK 6 - Nihao Beijing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif, 'Noto Sans SC'; }
+        .question-card, .option-label, input { font-size: 1.1rem; }
+        .correct { color: #16a34a; }
+        .incorrect { color: #dc2626; }
+        .option-label:has(input:checked) { background-color: #e0f2fe; border-color: #38bdf8; }
+        input[type="text"] { text-align: center; font-size: 1.5rem; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800">HSK 六级考试</h1>
+            <p class="text-slate-600 mt-2">50 道 HSK 6 练习题</p>
+        </header>
+        <main id="quiz-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg space-y-8">
+            <!-- Soal dimuat di sini -->
+        </main>
+        <div class="mt-8 text-center">
+            <button id="submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">提交答案</button>
+        </div>
+        <div id="result-container" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg mt-8 text-center">
+            <h2 id="result-title" class="text-2xl sm:text-3xl font-bold mb-4">考试结果</h2>
+            <p id="result-score" class="text-5xl font-bold mb-2"></p>
+            <p id="result-message" class="text-lg font-medium mb-6"></p>
+            <div id="review-section" class="mt-8 text-left border-t pt-6">
+                <h3 class="text-xl font-bold mb-4 text-center">错题详情</h3>
+                <div id="wrong-answers" class="space-y-4"></div>
+            </div>
+            <div class="flex justify-center space-x-4 mt-8">
+                <button id="retry-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">再试一次</button>
+                <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">返回菜单</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        const quizData = [
+            // --- Pilihan Ganda (30 soal) ---
+            { type: 'multiple-choice', question: "他为人...，从不计较个人得失。", options: ["慷慨", "吝啬", "自私"], answer: "慷慨" },
+            { type: 'multiple-choice', question: "这件事情非常...，必须立即处理。", options: ["要紧", "紧急", "迫切"], answer: "迫切" },
+            { type: 'multiple-choice', question: "他的理论...，但缺乏实践证明。", options: ["高深莫测", "深入浅出", "显而易见"], answer: "高深莫测" },
+            { type: 'multiple-choice', question: "面对失败，他并没有...，反而更加努力了。", options: ["一蹶不振", "半途而废", "坚持不懈"], answer: "一蹶不振" },
+            { type: 'multiple-choice', question: "这个项目的成功，...了团队所有成员的共同努力。", options: ["归功于", "取决于", "来源于"], answer: "归功于" },
+            { type: 'multiple-choice', question: "他的演讲...，赢得了阵阵掌声。", options: ["滔滔不绝", "引人入胜", "平淡无奇"], answer: "引人入胜" },
+            { type: 'multiple-choice', question: "在信息时代，我们必须不断更新知识，才不会被...。", options: ["淘汰", "抛弃", "放弃"], answer: "淘汰" },
+            { type: 'multiple-choice', question: "这个决定对公司的未来发展...。", options: ["至关重要", "举足轻重", "微不足道"], answer: "至关重要" },
+            { type: 'multiple-choice', question: "他们的意见...，很难达成一致。", options: ["南辕北辙", "大同小异", "不谋而合"], answer: "南辕北辙" },
+            { type: 'multiple-choice', question: "他对这个问题的分析非常...，抓住了问题的关键。", options: ["透彻", "肤浅", "模糊"], answer: "透彻" },
+            { type: 'multiple-choice', question: "这家餐厅的菜...，每天都顾客盈门。", options: ["别具一格", "家喻户晓", "名不副实"], answer: "别具一格" },
+            { type: 'multiple-choice', question: "他说话总是...，让人难以捉摸。", options: ["含糊其辞", "直截了当", "拐弯抹角"], answer: "含糊其辞" },
+            { type: 'multiple-choice', question: "面对...的证据，他不得不承认自己的错误。", options: ["确凿", "可靠", "真实"], answer: "确凿" },
+            { type: 'multiple-choice', question: "这个古老的传说...，至今仍在当地流传。", options: ["经久不衰", "昙花一现", "销声匿迹"], answer: "经久不衰" },
+            { type: 'multiple-choice', question: "他的设计理念...，为行业带来了新的气息。", options: ["标新立异", "墨守成规", "循规蹈矩"], answer: "标新立异" },
+            { type: 'multiple-choice', question: "这个地区的自然资源...，有待进一步开发。", options: ["得天独厚", "贫乏", "丰富"], answer: "得天独厚" },
+            { type: 'multiple-choice', question: "他用...的语言，讲述了一个感人的故事。", options: ["朴实", "华丽", "夸张"], answer: "朴实" },
+            { type: 'multiple-choice', question: "这件事情的真相终于...了。", options: ["水落石出", "真相大白", "扑朔迷离"], answer: "水落石出" },
+            { type: 'multiple-choice', question: "他的作品风格...，深受读者喜爱。", options: ["独树一帜", "千篇一律", "平淡无奇"], answer: "独树一帜" },
+            { type: 'multiple-choice', question: "我们应该...地看待这个问题，不能片面。", options: ["辩证", "客观", "主观"], answer: "辩证" },
+            { type: 'multiple-choice', question: "这个计划...，几乎没有成功的可能。", options: ["异想天开", "切实可行", "深思熟虑"], answer: "异想天开" },
+            { type: 'multiple-choice', question: "在关键时刻，他...，做出了正确的决定。", options: ["当机立断", "犹豫不决", "优柔寡断"], answer: "当机立断" },
+            { type: 'multiple-choice', question: "他们的合作...，共同完成了这个项目。", options: ["天衣无缝", "格格不入", "同床异梦"], answer: "天衣无缝" },
+            { type: 'multiple-choice', question: "这个城市的发展速度...。", options: ["日新月异", "停滞不前", "一成不变"], answer: "日新月异" },
+            { type: 'multiple-choice', question: "他的表演技巧已经达到了...的境界。", options: ["炉火纯青", "初出茅庐", "半生不熟"], answer: "炉火纯青" },
+            { type: 'multiple-choice', question: "这个问题...，需要专家来解答。", options: ["错综复杂", "一目了然", "轻而易举"], answer: "错综复杂" },
+            { type: 'multiple-choice', question: "他...，终于实现了自己的梦想。", options: ["锲而不舍", "半途而废", "三天打鱼，两天晒网"], answer: "锲而不舍" },
+            { type: 'multiple-choice', question: "这个理论听起来...，但经不起推敲。", options: ["自相矛盾", "无懈可击", "合情合理"], answer: "自相矛盾" },
+            { type: 'multiple-choice', question: "他对古典音乐有...的研究。", options: ["精湛", "渊博", "深厚"], answer: "渊博" },
+            { type: 'multiple-choice', question: "在困难面前，我们不能...，要勇敢面对。", options: ["束手无策", "从容不迫", "胸有成竹"], answer: "束手无策" },
+
+            // --- Menulis Hanzi (20 soal) ---
+            { type: 'writing', question: "写出“dengan penuh semangat/menikmati”的汉字。", answer: "津津有味" },
+            { type: 'writing', question: "写出“terkenal/diketahui semua orang”的汉字。", answer: "家喻户晓" },
+            { type: 'writing', question: "写出“tidak bisa dijelaskan/aneh”的汉字。", answer: "莫名其妙" },
+            { type: 'writing', question: "写出“konsentrasi penuh”的汉字。", answer: "全神贯注" },
+            { type: 'writing', question: "写出“lupa tidur dan makan (sangat tekun)”的汉字。", answer: "废寝忘食" },
+            { type: 'writing', question: "写出“pengaruh secara tidak sadar/perlahan”的汉字。", answer: "潜移默化" },
+            { type: 'writing', question: "写出“sangat teliti/penuh perhatian”的汉字。", answer: "无微不至" },
+            { type: 'writing', question: "写出“berakar dalam”的汉字。", answer: "根深蒂固" },
+            { type: 'writing', question: "写出“teliti/cermat”的汉字。", answer: "一丝不苟" },
+            { type: 'writing', question: "写出“muncul tanpa henti”的汉字。", answer: "层出不穷" },
+            { type: 'writing', question: "写出“terus menerus/tak ada habisnya”的汉字。", answer: "络绎不绝" },
+            { type: 'writing', question: "写出“sangat suka sampai tidak mau melepaskan”的汉字。", answer: "爱不释手" },
+            { type: 'writing', question: "写出“menganggap remeh/tidak peduli”的汉字。", answer: "不屑一顾" },
+            { type: 'writing', question: "写出“tekun/persisten”的汉字。", answer: "持之以恒" },
+            { type: 'writing', question: "写出“prioritas utama”的汉字。", answer: "当务之急" },
+            { type: 'writing', question: "写出“seperti yang diketahui semua orang”的汉字。", answer: "众所周知" },
+            { type: 'writing', question: "写出“sampai sekarang”的汉字。", answer: "迄今为止" },
+            { type: 'writing', question: "写出“saling melengkapi”的汉字。", answer: "相辅相成" },
+            { type: 'writing', question: "写出“maju selangkah demi selangkah”的汉字。", answer: "循序渐进" },
+            { type: 'writing', question: "写出“ragu-ragu/terlalu banyak pertimbangan”的汉字。", answer: "瞻前顾后" },
+        ];
+        
+        // --- SCRIPT KUIS (JANGAN DIUBAH) ---
+        const quizContainer = document.getElementById('quiz-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultContainer = document.getElementById('result-container');
+        const retryBtn = document.getElementById('retry-btn');
+        let questionNumber = 1;
+        let shuffledQuizData = [];
+
+        function displayQuestions() {
+            shuffledQuizData = [...quizData].sort(() => Math.random() - 0.5);
+            quizContainer.innerHTML = '';
+            
+            shuffledQuizData.forEach((item, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question-card border-b border-gray-200 pb-6';
+                
+                let contentHTML = '';
+                if (item.type === 'multiple-choice') {
+                    let optionsHTML = '<div class="space-y-3 mt-4">';
+                    item.options.forEach(option => {
+                        optionsHTML += `
+                            <label class="option-label flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                <input type="radio" name="question${index}" value="${option}" class="mr-3 h-4 w-4 text-blue-600">
+                                <span class="text-gray-700">${option}</span>
+                            </label>`;
+                    });
+                    optionsHTML += '</div>';
+                    contentHTML = `<p class="font-medium mt-1">${questionNumber}. ${item.question}</p>${optionsHTML}`;
+                } else if (item.type === 'writing') {
+                    contentHTML = `
+                        <p class="font-medium mt-1">${questionNumber}. ${item.question}</p>
+                        <div class="mt-4">
+                            <input type="text" id="question${index}" class="w-full max-w-xs mx-auto block p-4 border-2 border-gray-300 rounded-lg" placeholder="请写汉字">
+                        </div>`;
+                }
+                
+                questionElement.innerHTML = contentHTML;
+                quizContainer.appendChild(questionElement);
+                questionNumber++;
+            });
+            questionNumber = 1;
+        }
+
+        function calculateScore() {
+            let score = 0;
+            const wrongAnswers = [];
+            
+            shuffledQuizData.forEach((item, index) => {
+                let userAnswer;
+                if (item.type === 'multiple-choice') {
+                    const checkedOption = document.querySelector(`input[name="question${index}"]:checked`);
+                    userAnswer = checkedOption ? checkedOption.value : null;
+                } else {
+                    userAnswer = document.getElementById(`question${index}`).value.trim();
+                }
+
+                if (userAnswer === item.answer) {
+                    score++;
+                } else {
+                    wrongAnswers.push({
+                        question: item.question,
+                        userAnswer: userAnswer || "没回答",
+                        correctAnswer: item.answer
+                    });
+                }
+            });
+            displayResult(score, wrongAnswers);
+        }
+
+        function displayResult(score, wrongAnswers) {
+            quizContainer.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+
+            const totalQuestions = quizData.length;
+            const percentage = Math.round((score / totalQuestions) * 100);
+            const resultScore = document.getElementById('result-score');
+            const resultMessage = document.getElementById('result-message');
+            const resultTitle = document.getElementById('result-title');
+            const wrongAnswersContainer = document.getElementById('wrong-answers');
+            const reviewSection = document.getElementById('review-section');
+
+            resultScore.textContent = `${percentage}%`;
+            if (percentage >= 80) {
+                resultTitle.textContent = "恭喜，你通过了！";
+                resultScore.className = "text-5xl font-bold mb-2 text-green-600";
+                resultMessage.textContent = `你答对了 ${totalQuestions} 题中的 ${score} 题。`;
+            } else {
+                resultTitle.textContent = "很遗憾，请再努力！";
+                resultScore.className = "text-5xl font-bold mb-2 text-red-600";
+                resultMessage.textContent = `你只答对了 ${totalQuestions} 题中的 ${score} 题。`;
+            }
+
+            if (wrongAnswers.length > 0) {
+                reviewSection.classList.remove('hidden');
+                wrongAnswersContainer.innerHTML = '';
+                wrongAnswers.forEach(item => {
+                    const answerElement = document.createElement('div');
+                    answerElement.className = 'p-4 bg-red-50 border border-red-200 rounded-lg';
+                    answerElement.innerHTML = `
+                        <p class="font-semibold">${item.question}</p>
+                        <p class="mt-2 text-sm">你的答案: <span class="font-medium incorrect">${item.userAnswer}</span></p>
+                        <p class="mt-1 text-sm">正确答案: <span class="font-medium correct">${item.correctAnswer}</span></p>
+                    `;
+                    wrongAnswersContainer.appendChild(answerElement);
+                });
+            } else {
+                reviewSection.classList.add('hidden');
+            }
+        }
+
+        submitBtn.addEventListener('click', calculateScore);
+        retryBtn.addEventListener('click', () => window.location.reload());
+        displayQuestions();
+    </script>
+</body>
+</html>
+
+

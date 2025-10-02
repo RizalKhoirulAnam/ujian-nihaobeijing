@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian HSK 3 - Nihao Beijing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .question-card { transition: all 0.3s ease; }
+        .correct { color: #16a34a; }
+        .incorrect { color: #dc2626; }
+        .option-label { font-size: 1.25rem; }
+        .option-label:has(input:checked) { background-color: #e0f2fe; border-color: #38bdf8; }
+        input[type="text"] { text-align: center; font-size: 1.5rem; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800">Ujian HSK Level 3</h1>
+            <p class="text-slate-600 mt-2">50 Soal Latihan HSK 3</p>
+        </header>
+
+        <main id="quiz-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg space-y-8">
+            <!-- Soal dimuat di sini -->
+        </main>
+
+        <div class="mt-8 text-center">
+            <button id="submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Kumpulkan Jawaban</button>
+        </div>
+
+        <div id="result-container" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg mt-8 text-center">
+            <h2 id="result-title" class="text-2xl sm:text-3xl font-bold mb-4">Hasil Ujian Anda</h2>
+            <p id="result-score" class="text-5xl font-bold mb-2"></p>
+            <p id="result-message" class="text-lg font-medium mb-6"></p>
+            <div id="review-section" class="mt-8 text-left border-t pt-6">
+                <h3 class="text-xl font-bold mb-4 text-center">Rincian Jawaban Salah</h3>
+                <div id="wrong-answers" class="space-y-4"></div>
+            </div>
+            <div class="flex justify-center space-x-4 mt-8">
+                <button id="retry-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Coba Lagi</button>
+                <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Kembali ke Menu</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            // --- Pilihan Ganda (30 soal) ---
+            { type: 'multiple-choice', question: "Lengkapi kalimat: 我把作业...了。", options: ["做完", "吃饭", "看书"], answer: "做完" },
+            { type: 'multiple-choice', question: "Mana yang merupakan alat ukur untuk 'celana'?", options: ["条", "本", "只"], answer: "条" },
+            { type: 'multiple-choice', question: "Apa arti dari '冰箱'?", options: ["Televisi", "Kulkas", "AC"], answer: "Kulkas" },
+            { type: 'multiple-choice', question: "Dia merasa sedikit tidak nyaman. Kata yang tepat adalah...", options: ["舒服", "饿", "不舒服"], answer: "不舒服" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'lift'.", options: ["电梯", "地铁", "飞机"], answer: "电梯" },
+            { type: 'multiple-choice', question: "Jika kamu setuju, kamu akan bilang...", options: ["同意", "害怕", "生气"], answer: "同意" },
+            { type: 'multiple-choice', question: "Apa sinonim dari '高兴'?", options: ["难过", "快乐", "担心"], answer: "快乐" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'hobi'.", options: ["习惯", "爱好", "要求"], answer: "爱好" },
+            { type: 'multiple-choice', question: "Lengkapi kalimat: 除了...以外, ...", options: ["如果", "虽然", "我什么都喜欢"], answer: "我什么都喜欢" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'tetangga'.", options: ["同事", "邻居", "亲戚"], answer: "邻居" },
+            { type: 'multiple-choice', question: "Apa arti dari '环境'?", options: ["Lingkungan", "Kesehatan", "Budaya"], answer: "Lingkungan" },
+            { type: 'multiple-choice', question: "Mana yang merupakan musim?", options: ["春天", "晴天", "昨天"], answer: "春天" },
+            { type: 'multiple-choice', question: "Untuk menunjukkan perbandingan 'lebih', kita menggunakan...", options: ["最", "比较", "比"], answer: "比" },
+            { type: 'multiple-choice', question: "Apa arti dari '终于'?", options: ["Sebenarnya", "Tentu saja", "Akhirnya"], answer: "Akhirnya" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'paspor'.", options: ["照片", "护照", "地图"], answer: "护照" },
+            { type: 'multiple-choice', question: "Lengkapi kalimat: 我对他很...", options: ["了解", "见面", "完成"], answer: "了解" },
+            { type: 'multiple-choice', question: "Apa arti dari '举行'?", options: ["Memutuskan", "Mengadakan", "Mempengaruhi"], answer: "Mengadakan" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'email'.", options: ["电子邮件", "笔记本", "信用卡"], answer: "电子邮件" },
+            { type: 'multiple-choice', question: "Bagaimana cara mengatakan 'cemas/khawatir'?", options: ["满意", "着急", "放心"], answer: "着急" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'paman'.", options: ["叔叔", "阿姨", "爷爷"], answer: "叔叔" },
+            { type: 'multiple-choice', question: "Apa arti dari '几乎'?", options: ["Hampir", "Harus", "Baru saja"], answer: "Hampir" },
+            { type: 'multiple-choice', question: "Lengkapi kalimat: 这个会议很重要，你...要参加。", options: ["必须", "当然", "或者"], answer: "必须" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'perpustakaan'.", options: ["银行", "大使馆", "图书馆"], answer: "图书馆" },
+            { type: 'multiple-choice', question: "Apa arti dari '成绩'?", options: ["Hasil/Nilai", "Program", "Persyaratan"], answer: "Hasil/Nilai" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'haus'.", options: ["渴", "饱", "累"], answer: "渴" },
+            { type: 'multiple-choice', question: "Lengkapi kalimat: 为了健康，我们应该多...", options: ["抽烟", "喝酒", "锻炼"], answer: "锻炼" },
+            { type: 'multiple-choice', question: "Apa arti dari '安静'?", options: ["Bersih", "Tenang/Sunyi", "Manis"], answer: "Tenang/Sunyi" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'hewan'.", options: ["植物", "动物", "礼物"], answer: "动物" },
+            { type: 'multiple-choice', question: "Kata '把' digunakan dalam kalimat untuk...", options: ["Menekankan objek dari kata kerja", "Menunjukkan perbandingan", "Menyatakan waktu"], answer: "Menekankan objek dari kata kerja" },
+            { type: 'multiple-choice', question: "Apa arti dari '历史'?", options: ["Matematika", "Geografi", "Sejarah"], answer: "Sejarah" },
+
+            // --- Menulis Hanzi (20 soal) ---
+            { type: 'writing', question: "Tulis Hanzi untuk 'kulkas'.", answer: "冰箱" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'lift'.", answer: "电梯" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'AC'.", answer: "空调" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'hobi'.", answer: "爱好" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'lingkungan'.", answer: "环境" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'paspor'.", answer: "护照" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'akhirnya'.", answer: "终于" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'pertemuan'.", answer: "会议" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'nilai/hasil'.", answer: "成绩" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'tetangga'.", answer: "邻居" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'paman'.", answer: "叔叔" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'perpustakaan'.", answer: "图书馆" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'pisang'.", answer: "香蕉" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'segar'.", answer: "新鲜" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'jika'.", answer: "如果" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'berpikir/merasa'.", answer: "觉得" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'memilih'.", answer: "选择" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'celana'.", answer: "裤子" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'kemeja'.", answer: "衬衫" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'berolahraga'.", answer: "锻炼" },
+        ];
+
+        // --- SCRIPT KUIS (JANGAN DIUBAH) ---
+        const quizContainer = document.getElementById('quiz-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultContainer = document.getElementById('result-container');
+        const retryBtn = document.getElementById('retry-btn');
+        let questionNumber = 1;
+        let shuffledQuizData = [];
+
+        function displayQuestions() {
+            shuffledQuizData = [...quizData].sort(() => Math.random() - 0.5);
+            quizContainer.innerHTML = '';
+            
+            shuffledQuizData.forEach((item, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question-card border-b border-gray-200 pb-6';
+                
+                let contentHTML = '';
+                if (item.type === 'multiple-choice') {
+                    let optionsHTML = '<div class="space-y-3 mt-4">';
+                    item.options.forEach(option => {
+                        optionsHTML += `
+                            <label class="option-label flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                <input type="radio" name="question${index}" value="${option}" class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                <span class="text-gray-700">${option}</span>
+                            </label>`;
+                    });
+                    optionsHTML += '</div>';
+                    contentHTML = `<p class="text-lg font-medium mt-1">${questionNumber}. ${item.question}</p>${optionsHTML}`;
+                } else if (item.type === 'writing') {
+                    contentHTML = `
+                        <p class="text-lg font-medium mt-1">${questionNumber}. ${item.question}</p>
+                        <div class="mt-4">
+                            <input type="text" id="question${index}" class="w-full max-w-xs mx-auto block p-4 border-2 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Tulis Hanzi di sini">
+                        </div>`;
+                }
+                
+                questionElement.innerHTML = contentHTML;
+                quizContainer.appendChild(questionElement);
+                questionNumber++;
+            });
+            questionNumber = 1;
+        }
+
+        function calculateScore() {
+            let score = 0;
+            const wrongAnswers = [];
+            
+            shuffledQuizData.forEach((item, index) => {
+                let userAnswer;
+                if (item.type === 'multiple-choice') {
+                    const checkedOption = document.querySelector(`input[name="question${index}"]:checked`);
+                    userAnswer = checkedOption ? checkedOption.value : null;
+                } else {
+                    userAnswer = document.getElementById(`question${index}`).value.trim();
+                }
+
+                if (userAnswer === item.answer) {
+                    score++;
+                } else {
+                    wrongAnswers.push({
+                        question: item.question,
+                        userAnswer: userAnswer || "Tidak dijawab",
+                        correctAnswer: item.answer
+                    });
+                }
+            });
+            displayResult(score, wrongAnswers);
+        }
+
+        function displayResult(score, wrongAnswers) {
+            quizContainer.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+
+            const totalQuestions = quizData.length;
+            const percentage = Math.round((score / totalQuestions) * 100);
+            const resultScore = document.getElementById('result-score');
+            const resultMessage = document.getElementById('result-message');
+            const resultTitle = document.getElementById('result-title');
+            const wrongAnswersContainer = document.getElementById('wrong-answers');
+            const reviewSection = document.getElementById('review-section');
+
+            resultScore.textContent = `${percentage}%`;
+            if (percentage >= 80) {
+                resultTitle.textContent = "Luar Biasa, Anda Berhasil!";
+                resultScore.className = "text-5xl font-bold mb-2 text-green-600";
+                resultMessage.textContent = `Anda menjawab ${score} dari ${totalQuestions} soal dengan benar.`;
+            } else {
+                resultTitle.textContent = "Anda Gagal, Coba Lagi!";
+                resultScore.className = "text-5xl font-bold mb-2 text-red-600";
+                resultMessage.textContent = `Anda hanya menjawab ${score} dari ${totalQuestions} soal. Terus berlatih!`;
+            }
+
+            if (wrongAnswers.length > 0) {
+                reviewSection.classList.remove('hidden');
+                wrongAnswersContainer.innerHTML = '';
+                wrongAnswers.forEach(item => {
+                    const answerElement = document.createElement('div');
+                    answerElement.className = 'p-4 bg-red-50 border border-red-200 rounded-lg';
+                    answerElement.innerHTML = `
+                        <p class="font-semibold">${item.question}</p>
+                        <p class="mt-2 text-sm">Jawaban Anda: <span class="font-medium incorrect">${item.userAnswer}</span></p>
+                        <p class="mt-1 text-sm">Jawaban Benar: <span class="font-medium correct">${item.correctAnswer}</span></p>
+                    `;
+                    wrongAnswersContainer.appendChild(answerElement);
+                });
+            } else {
+                reviewSection.classList.add('hidden');
+            }
+        }
+
+        submitBtn.addEventListener('click', calculateScore);
+        retryBtn.addEventListener('click', () => window.location.reload());
+        displayQuestions();
+    </script>
+</body>
+</html>

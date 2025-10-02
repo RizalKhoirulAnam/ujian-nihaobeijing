@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian HSK 5 - Nihao Beijing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif, 'Noto Sans SC'; }
+        .question-card, .option-label, input { font-size: 1.1rem; }
+        .correct { color: #16a34a; }
+        .incorrect { color: #dc2626; }
+        .option-label:has(input:checked) { background-color: #e0f2fe; border-color: #38bdf8; }
+        input[type="text"] { text-align: center; font-size: 1.5rem; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800">HSK 五级考试</h1>
+            <p class="text-slate-600 mt-2">50 道 HSK 5 练习题</p>
+        </header>
+        <main id="quiz-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg space-y-8">
+            <!-- Soal dimuat di sini -->
+        </main>
+        <div class="mt-8 text-center">
+            <button id="submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">提交答案</button>
+        </div>
+        <div id="result-container" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg mt-8 text-center">
+            <h2 id="result-title" class="text-2xl sm:text-3xl font-bold mb-4">考试结果</h2>
+            <p id="result-score" class="text-5xl font-bold mb-2"></p>
+            <p id="result-message" class="text-lg font-medium mb-6"></p>
+            <div id="review-section" class="mt-8 text-left border-t pt-6">
+                <h3 class="text-xl font-bold mb-4 text-center">错题详情</h3>
+                <div id="wrong-answers" class="space-y-4"></div>
+            </div>
+            <div class="flex justify-center space-x-4 mt-8">
+                <button id="retry-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">再试一次</button>
+                <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">返回菜单</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        const quizData = [
+             // --- Pilihan Ganda (30 soal) ---
+            { type: 'multiple-choice', question: "面对困难，我们应该...，而不是退缩。", options: ["挑战", "迎接", "应付"], answer: "迎接" },
+            { type: 'multiple-choice', question: "这家公司的...非常大，有几千名员工。", options: ["规模", "范围", "程度"], answer: "规模" },
+            { type: 'multiple-choice', question: "他对艺术有...的见解。", options: ["独特", "奇怪", "特别"], answer: "独特" },
+            { type: 'multiple-choice', question: "请不要...我的话，听我解释完。", options: ["打断", "拒绝", "取消"], answer: "打断" },
+            { type: 'multiple-choice', question: "这个计划听起来很完美，但...起来可能有很多问题。", options: ["实现", "实践", "实验"], answer: "实践" },
+            { type: 'multiple-choice', question: "你的中文说得很...，像本地人一样。", options: ["流利", "地道", "标准"], answer: "地道" },
+            { type: 'multiple-choice', question: "他的演讲...了所有听众。", options: ["感动", "感染", "感觉"], answer: "感染" },
+            { type: 'multiple-choice', question: "这两种材料的...有很大区别。", options: ["成分", "特点", "性质"], answer: "性质" },
+            { type: 'multiple-choice', question: "做这个决定前，请...考虑。", options: ["再三", "反复", "重复"], answer: "再三" },
+            { type: 'multiple-choice', question: "他...自己是一个诚实的人。", options: ["声称", "宣布", "表示"], answer: "声称" },
+            { type: 'multiple-choice', question: "两国关系正朝着友好的方向...。", options: ["发展", "发挥", "发生"], answer: "发展" },
+            { type: 'multiple-choice', question: "这个问题很...，不是一两句话能说清楚的。", options: ["抽象", "具体", "模糊"], answer: "抽象" },
+            { type: 'multiple-choice', question: "请把你的...物品保管好。", options: ["宝贵", "珍贵", "贵重"], answer: "贵重" },
+            { type: 'multiple-choice', question: "他从小就...出非凡的音乐才能。", options: ["表现", "显示", "显露"], answer: "显露" },
+            { type: 'multiple-choice', question: "我们必须...采取行动，否则就太晚了。", options: ["立即", "马上", "迅速"], answer: "立即" },
+            { type: 'multiple-choice', question: "他对公司的...巨大，我们应该感谢他。", options: ["贡献", "成就", "功劳"], answer: "贡献" },
+            { type: 'multiple-choice', question: "这个地区的经济非常...。", options: ["繁荣", "发达", "先进"], answer: "繁荣" },
+            { type: 'multiple-choice', question: "不要轻易...，成功就在前方。", options: ["灰心", "失望", "伤心"], answer: "灰心" },
+            { type: 'multiple-choice', question: "我们应该学会如何...压力。", options: ["处理", "解决", "缓解"], answer: "缓解" },
+            { type: 'multiple-choice', question: "这幅画的色彩非常...。", options: ["鲜艳", "明亮", "强烈"], answer: "鲜艳" },
+            { type: 'multiple-choice', question: "他是一位...的科学家。", options: ["杰出", "优秀", "伟大"], answer: "杰出" },
+            { type: 'multiple-choice', question: "这部电影...了一个真实的故事。", options: ["反映", "反应", "反复"], answer: "反映" },
+            { type: 'multiple-choice', question: "请你...一下这个词的意思。", options: ["描写", "描述", "描绘"], answer: "描述" },
+            { type: 'multiple-choice', question: "我们的目标是...公司的市场份额。", options: ["扩大", "推广", "发展"], answer: "扩大" },
+            { type: 'multiple-choice', question: "这件事情的...很严重，必须认真处理。", options: ["后果", "结果", "效果"], answer: "后果" },
+            { type: 'multiple-choice', question: "他...了比赛的冠军。", options: ["得到", "获得", "取得"], answer: "获得" },
+            { type: 'multiple-choice', question: "我...他是不会骗人的。", options: ["保证", "确定", "肯定"], answer: "保证" },
+            { type: 'multiple-choice', question: "这个项目有很大的...。", options: ["前途", "前途", "潜力"], answer: "潜力" },
+            { type: 'multiple-choice', question: "他们的婚礼非常...。", options: ["热闹", "隆重", "豪华"], answer: "隆重" },
+            { type: 'multiple-choice', question: "请不要...别人。", options: ["模仿", "抄袭", "复制"], answer: "模仿" },
+
+            // --- Menulis Hanzi (20 soal) ---
+            { type: 'writing', question: "写出“rendah hati”的汉字。", answer: "谦虚" },
+            { type: 'writing', question: "写出“logika”的汉字。", answer: "逻辑" },
+            { type: 'writing', question: "写出“filsafat”的汉字。", answer: "哲学" },
+            { type: 'writing', question: "写出“ragu-ragu”的汉字。", answer: "犹豫" },
+            { type: 'writing', question: "写出“mendiagnosis”的汉字。", answer: "诊断" },
+            { type: 'writing', question: "写出“sistem”的汉字。", answer: "系统" },
+            { type: 'writing', question: "写出“tren”的汉字。", answer: "趋势" },
+            { type: 'writing', question: "写出“promosi”的汉字。", answer: "宣传" },
+            { type: 'writing', question: "写出“abstrak”的汉字。", answer: "抽象" },
+            { type: 'writing', question: "写出“konkret”的汉字。", answer: "具体" },
+            { type: 'writing', question: "写出“sementara”的汉字。", answer: "临时" },
+            { type: 'writing', question: "写出“fleksibel”的汉字。", answer: "灵活" },
+            { type: 'writing', question: "写出“kebetulan”的汉字。", answer: "偶然" },
+            { type: 'writing', question: "写出“pasti/tak terelakkan”的汉字。", answer: "必然" },
+            { type: 'writing', question: "写出“investasi”的汉字。", answer: "投资" },
+            { type: 'writing', question: "写出“konsumsi”的汉字。", answer: "消费" },
+            { type: 'writing', question: "写出“melambangkan”的汉字。", answer: "象征" },
+            { type: 'writing', question: "写出“berlebihan/hiperbola”的汉字。", answer: "夸张" },
+            { type: 'writing', question: "写出“menyindir/sarkasme”的汉字。", answer: "讽刺" },
+            { type: 'writing', question: "写出“pesona”的汉字。", answer: "魅力" },
+        ];
+        
+        // --- SCRIPT KUIS (JANGAN DIUBAH) ---
+        const quizContainer = document.getElementById('quiz-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultContainer = document.getElementById('result-container');
+        const retryBtn = document.getElementById('retry-btn');
+        let questionNumber = 1;
+        let shuffledQuizData = [];
+
+        function displayQuestions() {
+            shuffledQuizData = [...quizData].sort(() => Math.random() - 0.5);
+            quizContainer.innerHTML = '';
+            
+            shuffledQuizData.forEach((item, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question-card border-b border-gray-200 pb-6';
+                
+                let contentHTML = '';
+                if (item.type === 'multiple-choice') {
+                    let optionsHTML = '<div class="space-y-3 mt-4">';
+                    item.options.forEach(option => {
+                        optionsHTML += `
+                            <label class="option-label flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                <input type="radio" name="question${index}" value="${option}" class="mr-3 h-4 w-4 text-blue-600">
+                                <span class="text-gray-700">${option}</span>
+                            </label>`;
+                    });
+                    optionsHTML += '</div>';
+                    contentHTML = `<p class="font-medium mt-1">${questionNumber}. ${item.question}</p>${optionsHTML}`;
+                } else if (item.type === 'writing') {
+                    contentHTML = `
+                        <p class="font-medium mt-1">${questionNumber}. ${item.question}</p>
+                        <div class="mt-4">
+                            <input type="text" id="question${index}" class="w-full max-w-xs mx-auto block p-4 border-2 border-gray-300 rounded-lg" placeholder="请写汉字">
+                        </div>`;
+                }
+                
+                questionElement.innerHTML = contentHTML;
+                quizContainer.appendChild(questionElement);
+                questionNumber++;
+            });
+            questionNumber = 1;
+        }
+
+        function calculateScore() {
+            let score = 0;
+            const wrongAnswers = [];
+            
+            shuffledQuizData.forEach((item, index) => {
+                let userAnswer;
+                if (item.type === 'multiple-choice') {
+                    const checkedOption = document.querySelector(`input[name="question${index}"]:checked`);
+                    userAnswer = checkedOption ? checkedOption.value : null;
+                } else {
+                    userAnswer = document.getElementById(`question${index}`).value.trim();
+                }
+
+                if (userAnswer === item.answer) {
+                    score++;
+                } else {
+                    wrongAnswers.push({
+                        question: item.question,
+                        userAnswer: userAnswer || "没回答",
+                        correctAnswer: item.answer
+                    });
+                }
+            });
+            displayResult(score, wrongAnswers);
+        }
+
+        function displayResult(score, wrongAnswers) {
+            quizContainer.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+
+            const totalQuestions = quizData.length;
+            const percentage = Math.round((score / totalQuestions) * 100);
+            const resultScore = document.getElementById('result-score');
+            const resultMessage = document.getElementById('result-message');
+            const resultTitle = document.getElementById('result-title');
+            const wrongAnswersContainer = document.getElementById('wrong-answers');
+            const reviewSection = document.getElementById('review-section');
+
+            resultScore.textContent = `${percentage}%`;
+            if (percentage >= 80) {
+                resultTitle.textContent = "恭喜，你通过了！";
+                resultScore.className = "text-5xl font-bold mb-2 text-green-600";
+                resultMessage.textContent = `你答对了 ${totalQuestions} 题中的 ${score} 题。`;
+            } else {
+                resultTitle.textContent = "很遗憾，请再努力！";
+                resultScore.className = "text-5xl font-bold mb-2 text-red-600";
+                resultMessage.textContent = `你只答对了 ${totalQuestions} 题中的 ${score} 题。`;
+            }
+
+            if (wrongAnswers.length > 0) {
+                reviewSection.classList.remove('hidden');
+                wrongAnswersContainer.innerHTML = '';
+                wrongAnswers.forEach(item => {
+                    const answerElement = document.createElement('div');
+                    answerElement.className = 'p-4 bg-red-50 border border-red-200 rounded-lg';
+                    answerElement.innerHTML = `
+                        <p class="font-semibold">${item.question}</p>
+                        <p class="mt-2 text-sm">你的答案: <span class="font-medium incorrect">${item.userAnswer}</span></p>
+                        <p class="mt-1 text-sm">正确答案: <span class="font-medium correct">${item.correctAnswer}</span></p>
+                    `;
+                    wrongAnswersContainer.appendChild(answerElement);
+                });
+            } else {
+                reviewSection.classList.add('hidden');
+            }
+        }
+
+        submitBtn.addEventListener('click', calculateScore);
+        retryBtn.addEventListener('click', () => window.location.reload());
+        displayQuestions();
+    </script>
+</body>
+</html>
+
+

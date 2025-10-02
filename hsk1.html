@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian HSK 1 - Nihao Beijing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .question-card { transition: all 0.3s ease; }
+        .correct { color: #16a34a; }
+        .incorrect { color: #dc2626; }
+        .option-label:has(input:checked) { background-color: #e0f2fe; border-color: #38bdf8; }
+        /* Style untuk pinyin */
+        ruby { font-size: 1.25rem; }
+        rt { font-size: 0.75rem; color: #64748b; }
+        input[type="text"] { text-align: center; font-size: 1.5rem; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800">Ujian HSK Level 1</h1>
+            <p class="text-slate-600 mt-2">50 Soal Latihan HSK 1</p>
+        </header>
+
+        <main id="quiz-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg space-y-8">
+            <!-- Soal dimuat di sini -->
+        </main>
+
+        <div class="mt-8 text-center">
+            <button id="submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                Kumpulkan Jawaban
+            </button>
+        </div>
+
+        <div id="result-container" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg mt-8 text-center">
+            <h2 id="result-title" class="text-2xl sm:text-3xl font-bold mb-4">Hasil Ujian Anda</h2>
+            <p id="result-score" class="text-5xl font-bold mb-2"></p>
+            <p id="result-message" class="text-lg font-medium mb-6"></p>
+            <div id="review-section" class="mt-8 text-left border-t pt-6">
+                <h3 class="text-xl font-bold mb-4 text-center">Rincian Jawaban Salah</h3>
+                <div id="wrong-answers" class="space-y-4"></div>
+            </div>
+            <div class="flex justify-center space-x-4 mt-8">
+                <button id="retry-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Coba Lagi</button>
+                <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md inline-block">Kembali ke Menu</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            // --- Pilihan Ganda (30 soal) ---
+            { type: 'multiple-choice', question: "Pilih Hanzi yang benar untuk 'wǒ' (saya).", options: ["我", "你", "他"], answer: "我" },
+            { type: 'multiple-choice', question: "Apa arti dari <ruby>谢<rt>xiè</rt>谢<rt>xie</rt></ruby>?", options: ["Halo", "Terima kasih", "Maaf", "Selamat tinggal"], answer: "Terima kasih" },
+            { type: 'multiple-choice', question: "Gambar [Apel]. Ini adalah...", options: ["<ruby>苹<rt>píng</rt>果<rt>guǒ</rt></ruby>", "<ruby>水<rt>shuǐ</rt></ruby>", "<ruby>猫<rt>māo</rt></ruby>", "<ruby>狗<rt>gǒu</rt></ruby>"], answer: "<ruby>苹<rt>píng</rt>果<rt>guǒ</rt></ruby>" },
+            { type: 'multiple-choice', question: "<ruby>他<rt>tā</rt></ruby> <ruby>是<rt>shì</rt></ruby> <ruby>医<rt>yī</rt>生<rt>shēng</rt></ruby>。 ('Dia adalah dokter'). Siapakah dia?", options: ["<ruby>老<rt>lǎo</rt>师<rt>shī</rt></ruby>", "<ruby>学<rt>xué</rt>生<rt>sheng</rt></ruby>", "<ruby>医<rt>yī</rt>生<rt>shēng</rt></ruby>"], answer: "<ruby>医<rt>yī</rt>生<rt>shēng</rt></ruby>" },
+            { type: 'multiple-choice', question: "Bagaimana cara mengatakan 'tidak'?", options: ["<ruby>不<rt>bù</rt></ruby>", "<ruby>是<rt>shì</rt></ruby>", "<ruby>好<rt>hǎo</rt></ruby>"], answer: "<ruby>不<rt>bù</rt></ruby>" },
+            { type: 'multiple-choice', question: "Angka 8 dalam bahasa Mandarin adalah...", options: ["<ruby>八<rt>bā</rt></ruby>", "<ruby>七<rt>qī</rt></ruby>", "<ruby>九<rt>jiǔ</rt></ruby>"], answer: "<ruby>八<rt>bā</rt></ruby>" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'makan'.", options: ["<ruby>吃<rt>chī</rt></ruby>", "<ruby>喝<rt>hē</rt></ruby>", "<ruby>看<rt>kàn</rt></ruby>"], answer: "<ruby>吃<rt>chī</rt></ruby>" },
+            { type: 'multiple-choice', question: "Apa arti dari <ruby>爸<rt>bà</rt>爸<rt>ba</rt></ruby>?", options: ["Ibu", "Ayah", "Anak laki-laki"], answer: "Ayah" },
+            { type: 'multiple-choice', question: "Di mana <ruby>学<rt>xué</rt>生<rt>sheng</rt></ruby> ('murid') belajar?", options: ["<ruby>医<rt>yī</rt>院<rt>yuàn</rt></ruby>", "<ruby>学<rt>xué</rt>校<rt>xiào</rt></ruby>", "<ruby>商<rt>shāng</rt>店<rt>diàn</rt></ruby>"], answer: "<ruby>学<rt>xué</rt>校<rt>xiào</rt></ruby>" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'hari ini'.", options: ["<ruby>今<rt>jīn</rt>天<rt>tiān</rt></ruby>", "<ruby>明<rt>míng</rt>天<rt>tiān</rt></ruby>", "<ruby>昨<rt>zuó</rt>天<rt>tiān</rt></ruby>"], answer: "<ruby>今<rt>jīn</rt>天<rt>tiān</rt></ruby>" },
+            { type: 'multiple-choice', question: "Apa arti dari <ruby>多<rt>duō</rt>少<rt>shǎo</rt></ruby> <ruby>钱<rt>qián</rt></ruby>?", options: ["Siapa namamu?", "Berapa harganya?", "Kamu dari mana?"], answer: "Berapa harganya?" },
+            { type: 'multiple-choice', question: "<ruby>我<rt>wǒ</rt></ruby> <ruby>想<rt>xiǎng</rt></ruby> <ruby>喝<rt>hē</rt></ruby>... ('Saya ingin minum...').", options: ["<ruby>米<rt>mǐ</rt>饭<rt>fàn</rt></ruby>", "<ruby>茶<rt>chá</rt></ruby>", "<ruby>苹<rt>píng</rt>果<rt>guǒ</rt></ruby>"], answer: "<ruby>茶<rt>chá</rt></ruby>" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'teman'.", options: ["<ruby>家<rt>jiā</rt></ruby>", "<ruby>朋<rt>péng</rt>友<rt>you</rt></ruby>", "<ruby>同<rt>tóng</rt>学<rt>xué</rt></ruby>"], answer: "<ruby>朋<rt>péng</rt>友<rt>you</rt></ruby>" },
+            { type: 'multiple-choice', question: "Mana yang merupakan alat transportasi?", options: ["<ruby>飞<rt>fēi</rt>机<rt>jī</rt></ruby>", "<ruby>电<rt>diàn</rt>视<rt>shì</rt></ruby>", "<ruby>电<rt>diàn</rt>脑<rt>nǎo</rt></ruby>"], answer: "<ruby>飞<rt>fēi</rt>机<rt>jī</rt></ruby>" },
+            { type: 'multiple-choice', question: "Apa arti dari <ruby>冷<rt>lěng</rt></ruby>?", options: ["Panas", "Dingin", "Besar"], answer: "Dingin" },
+            { type: 'multiple-choice', question: "Bagaimana cara bertanya 'siapa'?", options: ["<ruby>谁<rt>shéi</rt></ruby>", "<ruby>什<rt>shén</rt>么<rt>me</rt></ruby>", "<ruby>哪<rt>nǎ</rt>儿<rt>er</rt></ruby>"], answer: "<ruby>谁<rt>shéi</rt></ruby>" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'buku'.", options: ["<ruby>桌<rt>zhuō</rt>子<rt>zi</rt></ruby>", "<ruby>椅<rt>yǐ</rt>子<rt>zi</rt></ruby>", "<ruby>书<rt>shū</rt></ruby>"], answer: "<ruby>书<rt>shū</rt></ruby>" },
+            { type: 'multiple-choice', question: "Apa arti dari <ruby>女<rt>nǚ</rt>儿<rt>ér</rt></ruby>?", options: ["Anak laki-laki", "Anak perempuan", "Ibu"], answer: "Anak perempuan" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'senang'.", options: ["<ruby>高<rt>gāo</rt>兴<rt>xìng</rt></ruby>", "<ruby>小<rt>xiǎo</rt></ruby>", "<ruby>少<rt>shǎo</rt></ruby>"], answer: "<ruby>高<rt>gāo</rt>兴<rt>xìng</rt></ruby>" },
+            { type: 'multiple-choice', question: "<ruby>现<rt>xiàn</rt>在<rt>zài</rt></ruby> <ruby>几<rt>jǐ</rt></ruby> <ruby>点<rt>diǎn</rt></ruby>? ('Jam berapa sekarang?'). Jawaban yang mungkin adalah...", options: ["<ruby>三<rt>sān</rt></ruby> <ruby>点<rt>diǎn</rt></ruby>", "<ruby>星<rt>xīng</rt>期<rt>qī</rt>一<rt>yī</rt></ruby>", "<ruby>北<rt>běi</rt>京<rt>jīng</rt></ruby>"], answer: "<ruby>三<rt>sān</rt></ruby> <ruby>点<rt>diǎn</rt></ruby>" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'cuaca'.", options: ["<ruby>天<rt>tiān</rt>气<rt>qì</rt></ruby>", "<ruby>名<rt>míng</rt>字<rt>zi</rt></ruby>", "<ruby>先<rt>xiān</rt>生<rt>sheng</rt></ruby>"], answer: "<ruby>天<rt>tiān</rt>气<rt>qì</rt></ruby>" },
+            { type: 'multiple-choice', question: "Apa arti dari <ruby>先<rt>xiān</rt>生<rt>sheng</rt></ruby>?", options: ["Nona", "Tuan", "Teman"], answer: "Tuan" },
+            { type: 'multiple-choice', question: "Bagaimana cara mengatakan 'bisa' (kemampuan)?", options: ["<ruby>会<rt>huì</rt></ruby>", "<ruby>爱<rt>ài</rt></ruby>", "<ruby>是<rt>shì</rt></ruby>"], answer: "<ruby>会<rt>huì</rt></ruby>" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'anjing'.", options: ["<ruby>猫<rt>māo</rt></ruby>", "<ruby>鱼<rt>yú</rt></ruby>", "<ruby>狗<rt>gǒu</rt></ruby>"], answer: "<ruby>狗<rt>gǒu</rt></ruby>" },
+            { type: 'multiple-choice', question: "<ruby>这<rt>zhè</rt></ruby> <ruby>是<rt>shì</rt></ruby> ... ('Ini adalah...').", options: ["<ruby>我<rt>wǒ</rt></ruby>", "<ruby>那<rt>nà</rt></ruby>", "<ruby>书<rt>shū</rt></ruby>"], answer: "<ruby>书<rt>shū</rt></ruby>" },
+            { type: 'multiple-choice', question: "Apa arti dari <ruby>汉<rt>hàn</rt>语<rt>yǔ</rt></ruby>?", options: ["Bahasa Inggris", "Bahasa Mandarin", "Karakter"], answer: "Bahasa Mandarin" },
+            { type: 'multiple-choice', question: "Angka 10 dalam bahasa Mandarin adalah...", options: ["<ruby>一<rt>yī</rt></ruby>", "<ruby>十<rt>shí</rt></ruby>", "<ruby>百<rt>bǎi</rt></ruby>"], answer: "<ruby>十<rt>shí</rt></ruby>" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'mendengarkan'.", options: ["<ruby>说<rt>shuō</rt></ruby>", "<ruby>读<rt>dú</rt></ruby>", "<ruby>听<rt>tīng</rt></ruby>"], answer: "<ruby>听<rt>tīng</rt></ruby>" },
+            { type: 'multiple-choice', question: "Pilih kata untuk 'menulis'.", options: ["<ruby>写<rt>xiě</rt></ruby>", "<ruby>看<rt>kàn</rt></ruby>", "<ruby>坐<rt>zuò</rt></ruby>"], answer: "<ruby>写<rt>xiě</rt></ruby>" },
+            { type: 'multiple-choice', question: "Apa arti dari <ruby>没<rt>méi</rt></ruby> <ruby>关<rt>guān</rt>系<rt>xi</rt></ruby>?", options: ["Sama-sama", "Tidak apa-apa", "Selamat datang"], answer: "Tidak apa-apa" },
+            // --- Menulis Hanzi (20 soal) ---
+            { type: 'writing', question: "Tulis Hanzi untuk 'besar'.", answer: "大" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'kecil'.", answer: "小" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'manusia/orang'.", answer: "人" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'air'.", answer: "水" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'api'.", answer: "火" },
+            { type: 'writing', question: "Tulis Hanzi untuk angka 'satu'.", answer: "一" },
+            { type: 'writing', question: "Tulis Hanzi untuk angka 'dua'.", answer: "二" },
+            { type: 'writing', question: "Tulis Hanzi untuk angka 'tiga'.", answer: "三" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'atas'.", answer: "上" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'bawah'.", answer: "下" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'mulut'.", answer: "口" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'matahari/hari'.", answer: "日" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'bulan/bulan (waktu)'.", answer: "月" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'cinta'.", answer: "爱" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'halo'.", answer: "你好" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'selamat tinggal'.", answer: "再见" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'Cina'.", answer: "中国" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'guru'.", answer: "老师" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'murid'.", answer: "学生" },
+            { type: 'writing', question: "Tulis Hanzi untuk 'nasi'.", answer: "米饭" },
+        ];
+
+        // --- SCRIPT KUIS (JANGAN DIUBAH) ---
+        const quizContainer = document.getElementById('quiz-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultContainer = document.getElementById('result-container');
+        const retryBtn = document.getElementById('retry-btn');
+        let questionNumber = 1;
+        let shuffledQuizData = [];
+
+        function displayQuestions() {
+            shuffledQuizData = [...quizData].sort(() => Math.random() - 0.5);
+            quizContainer.innerHTML = '';
+            
+            shuffledQuizData.forEach((item, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question-card border-b border-gray-200 pb-6';
+                
+                let contentHTML = '';
+                if (item.type === 'multiple-choice') {
+                    let optionsHTML = '<div class="space-y-3 mt-4">';
+                    item.options.forEach(option => {
+                        optionsHTML += `
+                            <label class="option-label flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                <input type="radio" name="question${index}" value="${option.replace(/<rt>.*?<\/rt>/g, '')}" class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                <span class="text-gray-700">${option}</span>
+                            </label>`;
+                    });
+                    optionsHTML += '</div>';
+                    contentHTML = `<p class="text-lg font-medium mt-1">${questionNumber}. ${item.question}</p>${optionsHTML}`;
+                } else if (item.type === 'writing') {
+                    contentHTML = `
+                        <p class="text-lg font-medium mt-1">${questionNumber}. ${item.question}</p>
+                        <div class="mt-4">
+                            <input type="text" id="question${index}" class="w-full max-w-xs mx-auto block p-4 border-2 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Tulis Hanzi di sini">
+                        </div>`;
+                }
+                
+                questionElement.innerHTML = contentHTML;
+                quizContainer.appendChild(questionElement);
+                questionNumber++;
+            });
+            questionNumber = 1;
+        }
+
+        function calculateScore() {
+            let score = 0;
+            const wrongAnswers = [];
+            
+            shuffledQuizData.forEach((item, index) => {
+                let userAnswer;
+                if (item.type === 'multiple-choice') {
+                    const checkedOption = document.querySelector(`input[name="question${index}"]:checked`);
+                    userAnswer = checkedOption ? checkedOption.value.replace(/<[^>]*>/g, '') : null;
+                } else {
+                    userAnswer = document.getElementById(`question${index}`).value.trim();
+                }
+
+                const correctAnswer = item.answer.replace(/<[^>]*>/g, '');
+                if (userAnswer === correctAnswer) {
+                    score++;
+                } else {
+                    wrongAnswers.push({
+                        question: item.question,
+                        userAnswer: userAnswer || "Tidak dijawab",
+                        correctAnswer: item.answer
+                    });
+                }
+            });
+            displayResult(score, wrongAnswers);
+        }
+
+        function displayResult(score, wrongAnswers) {
+            quizContainer.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+
+            const totalQuestions = quizData.length;
+            const percentage = Math.round((score / totalQuestions) * 100);
+            const resultScore = document.getElementById('result-score');
+            const resultMessage = document.getElementById('result-message');
+            const resultTitle = document.getElementById('result-title');
+            const wrongAnswersContainer = document.getElementById('wrong-answers');
+            const reviewSection = document.getElementById('review-section');
+
+            resultScore.textContent = `${percentage}%`;
+            if (percentage >= 80) {
+                resultTitle.textContent = "Luar Biasa, Anda Berhasil!";
+                resultScore.className = "text-5xl font-bold mb-2 text-green-600";
+                resultMessage.textContent = `Anda menjawab ${score} dari ${totalQuestions} soal dengan benar.`;
+            } else {
+                resultTitle.textContent = "Anda Gagal, Coba Lagi!";
+                resultScore.className = "text-5xl font-bold mb-2 text-red-600";
+                resultMessage.textContent = `Anda hanya menjawab ${score} dari ${totalQuestions} soal. Terus berlatih!`;
+            }
+
+            if (wrongAnswers.length > 0) {
+                reviewSection.classList.remove('hidden');
+                wrongAnswersContainer.innerHTML = '';
+                wrongAnswers.forEach(item => {
+                    const answerElement = document.createElement('div');
+                    answerElement.className = 'p-4 bg-red-50 border border-red-200 rounded-lg';
+                    answerElement.innerHTML = `
+                        <p class="font-semibold">${item.question}</p>
+                        <p class="mt-2 text-sm">Jawaban Anda: <span class="font-medium incorrect">${item.userAnswer}</span></p>
+                        <p class="mt-1 text-sm">Jawaban Benar: <span class="font-medium correct">${item.correctAnswer}</span></p>
+                    `;
+                    wrongAnswersContainer.appendChild(answerElement);
+                });
+            } else {
+                reviewSection.classList.add('hidden');
+            }
+        }
+
+        submitBtn.addEventListener('click', calculateScore);
+        retryBtn.addEventListener('click', () => window.location.reload());
+        displayQuestions();
+    </script>
+</body>
+</html>
