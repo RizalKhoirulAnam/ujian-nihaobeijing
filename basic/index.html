@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Mandarin Interaktif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .question-card {
+            transition: all 0.3s ease;
+        }
+        .correct {
+            color: #16a34a; /* green-600 */
+        }
+        .incorrect {
+            color: #dc2626; /* red-600 */
+        }
+        .option-label:has(input:checked) {
+            background-color: #e0f2fe; /* sky-100 */
+            border-color: #38bdf8; /* sky-400 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800">Kuis Mandarin Interaktif</h1>
+            <p class="text-slate-600 mt-2">Uji pengetahuan dasar Mandarin Anda!</p>
+        </header>
+
+        <main id="quiz-container" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg space-y-8">
+            <!-- Soal-soal akan dimuat di sini oleh JavaScript -->
+        </main>
+
+        <div class="mt-8 text-center">
+            <button id="submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Kumpulkan Jawaban
+            </button>
+        </div>
+
+        <div id="result-container" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg mt-8 text-center">
+            <h2 id="result-title" class="text-2xl sm:text-3xl font-bold mb-4">Hasil Kuis Anda</h2>
+            <p id="result-score" class="text-5xl font-bold mb-2"></p>
+            <p id="result-message" class="text-lg font-medium mb-6"></p>
+            
+            <div id="review-section" class="mt-8 text-left border-t pt-6">
+                <h3 class="text-xl font-bold mb-4 text-center">Rincian Jawaban Salah</h3>
+                <div id="wrong-answers" class="space-y-4"></div>
+            </div>
+
+            <button id="retry-btn" class="mt-8 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
+                Coba Lagi
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA SOAL ---
+        // Materi diambil dari file PDF yang dilampirkan
+        const quizData = [
+            // Kategori: Reading (Membaca Pinyin & Hanzi)
+            { question: "Apa pinyin untuk '我'?", options: ["wǒ", "nǐ", "tā"], answer: "wǒ", type: "reading" },
+            { question: "Hanzi '你' dibaca...", options: ["wǒ", "nǐ", "tā"], answer: "nǐ", type: "reading" },
+            { question: "Nada yang digunakan pada 'mā' (妈) adalah...", options: ["Nada 1 (datar)", "Nada 2 (naik)", "Nada 3 (turun-naik)", "Nada 4 (turun)"], answer: "Nada 1 (datar)", type: "reading" },
+            { question: "Nada yang digunakan pada 'mǎ' (马) adalah...", options: ["Nada 1 (datar)", "Nada 2 (naik)", "Nada 3 (turun-naik)", "Nada 4 (turun)"], answer: "Nada 3 (turun-naik)", type: "reading" },
+            { question: "Apa arti dari '老师' (lǎoshī)?", options: ["Teman", "Guru", "Keluarga", "Saya"], answer: "Guru", type: "reading" },
+            { question: "Pinyin untuk angka 6 adalah...", options: ["liù", "qī", "bā", "jiǔ"], answer: "liù", type: "reading" },
+            { question: "Pinyin untuk angka 10 adalah...", options: ["shí", "bǎi", "qiān", "wàn"], answer: "shí", type: "reading" },
+            { question: "Angka '二十' (èr shí) berarti...", options: ["12", "20", "2", "200"], answer: "20", type: "reading" },
+            { question: "Apa arti dari '爸爸' (bàba)?", options: ["Ibu", "Kakak laki-laki", "Ayah", "Adik laki-laki"], answer: "Ayah", type: "reading" },
+            { question: "Apa arti dari '姐姐' (jiějiě)?", options: ["Adik perempuan", "Kakak perempuan", "Ibu", "Nenek"], answer: "Kakak perempuan", type: "reading" },
+            { question: "Hanzi untuk 'ratusan' adalah...", options: ["百", "千", "万", "十"], answer: "百", type: "reading" },
+            { question: "Hanzi untuk 'ribuan' adalah...", options: ["百", "千", "万", "十"], answer: "千", type: "reading" },
+            { question: "'两百' (liǎng bǎi) adalah cara membaca angka...", options: ["102", "220", "200", "2000"], answer: "200", type: "reading" },
+            { question: "Apa arti dari '朋友' (péngyou)?", options: ["Guru", "Teman", "Murid", "Kalian"], answer: "Teman", type: "reading" },
+            { question: "Pinyin untuk '再见' adalah...", options: ["nǐ hǎo", "xièxiè", "duìbuqǐ", "zàijiàn"], answer: "zàijiàn", type: "reading" },
+            { question: "Angka 9 dalam pinyin adalah...", options: ["qī", "bā", "jiǔ", "shí"], answer: "jiǔ", type: "reading"},
+            { question: "Apa arti dari '妈妈' (māmā)?", options: ["Ayah", "Ibu", "Kakak", "Adik"], answer: "Ibu", type: "reading"},
+            { question: "'弟弟' (dìdi) berarti...", options: ["Kakak laki-laki", "Adik laki-laki", "Kakak perempuan", "Adik perempuan"], answer: "Adik laki-laki", type: "reading"},
+            { question: "Pinyin untuk 0 adalah...", options: ["yī", "líng", "èr", "sān"], answer: "líng", type: "reading"},
+            { question: "Hanzi '家' (jiā) berarti...", options: ["Rumah/Keluarga", "Sekolah", "Teman", "Negara"], answer: "Rumah/Keluarga", type: "reading"},
+
+            // Konversi dari soal menulis ke pilihan ganda
+            { question: "Pinyin untuk angka 18 adalah...", options: ["shí bā", "yī bā", "shí bǎi", "èr shí"], answer: "shí bā", type: "reading" },
+            { question: "Pinyin untuk angka 52 adalah...", options: ["wǔ shí èr", "wǔ èr", "líng wǔ èr", "wǔ shí"], answer: "wǔ shí èr", type: "reading" },
+            { question: "Pinyin untuk angka 39 adalah...", options: ["sān shí jiǔ", "sān jiǔ", "shí sān jiǔ", "sān shí"], answer: "sān shí jiǔ", type: "reading" },
+            { question: "Pinyin untuk 'terima kasih' adalah...", options: ["xièxiè", "duìbuqǐ", "nǐ hǎo", "zàijiàn"], answer: "xièxiè", type: "reading" },
+            { question: "Pinyin untuk 'maaf' adalah...", options: ["duìbuqǐ", "xièxiè", "méi guānxi", "bú kèqì"], answer: "duìbuqǐ", type: "reading" },
+            { question: "Pinyin untuk 'kamu' (bentuk sopan) adalah...", options: ["nín", "nǐ", "nǐmen", "tā"], answer: "nín", type: "reading" },
+            { question: "Pinyin untuk 'mereka' (laki-laki) adalah...", options: ["tāmen", "wǒmen", "nǐmen", "tā"], answer: "tāmen", type: "reading" },
+            { question: "Pinyin untuk 'kita/kami' adalah...", options: ["wǒmen", "nǐmen", "tāmen", "wǒ"], answer: "wǒmen", type: "reading" },
+            { question: "Pinyin untuk angka 100 adalah...", options: ["yì bǎi", "shí bǎi", "yī líng líng", "bǎi"], answer: "yì bǎi", type: "reading" },
+            { question: "Pinyin untuk 'adik perempuan' adalah...", options: ["mèimei", "jiějiě", "dìdi", "gēge"], answer: "mèimei", type: "reading" },
+            { question: "Pinyin untuk angka 44 adalah...", options: ["sì shí sì", "sì sì", "shí sì", "sì shí"], answer: "sì shí sì", type: "reading" },
+            { question: "Pinyin untuk angka 88 adalah...", options: ["bā shí bā", "bā bā", "shí bā", "bā shí"], answer: "bā shí bā", type: "reading" },
+            { question: "Pinyin untuk 'sama-sama' atau 'terima kasih kembali' adalah...", options: ["bú kèqì", "méi guānxi", "xièxiè", "duìbuqǐ"], answer: "bú kèqì", type: "reading" },
+            { question: "Pinyin untuk 'anak' adalah...", options: ["háizi", "bàba", "māma", "péngyou"], answer: "háizi", type: "reading" },
+            { question: "Pinyin untuk 'kakak laki-laki' adalah...", options: ["gēge", "dìdi", "jiějiě", "mèimei"], answer: "gēge", type: "reading" },
+            
+            // Kategori: Yuedu (Pemahaman Membaca)
+            { question: "Jika seseorang berkata '你好' (nǐ hǎo), jawaban yang paling umum adalah...", options: ["再见 (zàijiàn)", "你好 (nǐ hǎo)", "谢谢 (xièxiè)", "对不起 (duìbuqǐ)"], answer: "你好 (nǐ hǎo)", type: "yuedu" },
+            { question: "Kalimat '我家有四个人' (wǒ jiā yǒu sì gè rén) berarti...", options: ["Keluargaku punya 4 guru", "Saya punya 4 teman", "Keluargaku ada 4 orang", "Di rumah ada 4 anjing"], answer: "Keluargaku ada 4 orang", type: "yuedu" },
+            { question: "Pertanyaan '你叫什么名字?' (nǐ jiào shénme míngzì?) digunakan untuk menanyakan...", options: ["Umur", "Asal", "Nama", "Hobi"], answer: "Nama", type: "yuedu" },
+            { question: "Untuk menjawab pertanyaan '你今年几岁?' (nǐ jīnnián jǐ suì?), Anda akan memberikan informasi tentang...", options: ["Nama keluarga Anda", "Jumlah anggota keluarga", "Usia Anda", "Nama teman Anda"], answer: "Usia Anda", type: "yuedu" },
+            { question: "Jika seseorang berkata '谢谢你' (xièxiè nǐ), respons yang sopan adalah...", options: ["不客气 (bú kèqì)", "没关系 (méi guānxi)", "你好 (nǐ hǎo)", "再见 (zàijiàn)"], answer: "不客气 (bú kèqì)", type: "yuedu" },
+            { question: "Ungkapan 'sampai jumpa lagi' dalam bahasa Mandarin adalah...", options: ["你好 (nǐ hǎo)", "对不起 (duìbuqǐ)", "再见 (zàijiàn)", "没关系 (méi guānxi)"], answer: "再见 (zàijiàn)", type: "yuedu" },
+            { question: "Kata '们' (men) ditambahkan pada kata ganti orang untuk menunjukkan bentuk...", options: ["Tunggal", "Jamak", "Sopan", "Tanya"], answer: "Jamak", type: "yuedu" },
+            { question: "Dalam angka 173 (一百七十三), hanzi '七' (qī) mewakili...", options: ["Ratusan", "Puluhan", "Satuan", "Ribuan"], answer: "Puluhan", type: "yuedu" },
+            { question: "Pertanyaan '你家有什么人?' (nǐ jiā yǒu shénme rén?) menanyakan...", options: ["Ada berapa orang di keluargamu?", "Siapa saja yang ada di keluargamu?", "Di mana rumahmu?", "Apa pekerjaan ayahmu?"], answer: "Siapa saja yang ada di keluargamu?", type: "yuedu" },
+            { question: "Jika Anda melakukan kesalahan, Anda seharusnya mengatakan...", options: ["谢谢 (xièxiè)", "对不起 (duìbuqǐ)", "没关系 (méi guānxi)", "你好 (nǐ hǎo)"], answer: "对不起 (duìbuqǐ)", type: "yuedu" },
+            { question: "Jika seseorang berkata '对不起' (duìbuqǐ), balasan yang umum adalah...", options: ["谢谢 (xièxiè)", "没关系 (méi guānxi)", "再见 (zàijiàn)", "你好 (nǐ hǎo)"], answer: "没关系 (méi guānxi)", type: "yuedu" },
+            { question: "Angka 308 dibaca sebagai...", options: ["sān bǎi bā", "sān bǎi líng bā", "sān shí bā", "sān líng bā"], answer: "sān bǎi líng bā", type: "yuedu" },
+            { question: "'很高兴认识你' (hěn gāoxìng rènshi nǐ) adalah ungkapan yang berarti...", options: ["Selamat pagi", "Siapa namamu?", "Senang berkenalan denganmu", "Terima kasih banyak"], answer: "Senang berkenalan denganmu", type: "yuedu" },
+            { question: "Untuk menanyakan jumlah orang dalam keluarga, kalimat yang tepat adalah...", options: ["你家有什么人?", "你叫什么名字?", "你家有几个人?", "你今年几岁?"], answer: "你家有几个人?", type: "yuedu" },
+            { question: "Kata '它' (tā) digunakan sebagai kata ganti untuk...", options: ["Dia (laki-laki)", "Dia (perempuan)", "Dia (benda/hewan)", "Mereka"], answer: "Dia (benda/hewan)", type: "yuedu" },
+        ];
+
+        const quizContainer = document.getElementById('quiz-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultContainer = document.getElementById('result-container');
+        const retryBtn = document.getElementById('retry-btn');
+        
+        let questionNumber = 1;
+        let shuffledQuizData = [];
+
+        function displayQuestions() {
+            // Mengacak urutan soal setiap kali ditampilkan
+            shuffledQuizData = [...quizData].sort(() => Math.random() - 0.5);
+            quizContainer.innerHTML = '';
+            
+            shuffledQuizData.forEach((item, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question-card border-b border-gray-200 pb-6';
+                
+                let categoryText = '';
+                if (item.type === 'reading') categoryText = 'Membaca';
+                else if (item.type === 'yuedu') categoryText = 'Pemahaman';
+
+                let optionsHTML = '';
+                // Semua soal sekarang pilihan ganda
+                optionsHTML = '<div class="space-y-3 mt-4">';
+                item.options.forEach(option => {
+                    optionsHTML += `
+                        <label class="option-label flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                            <input type="radio" name="question${index}" value="${option}" class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                            <span class="text-gray-700">${option}</span>
+                        </label>
+                    `;
+                });
+                optionsHTML += '</div>';
+
+                questionElement.innerHTML = `
+                    <p class="text-sm font-semibold text-blue-600">${categoryText}</p>
+                    <p class="text-lg font-medium mt-1">${questionNumber}. ${item.question}</p>
+                    ${optionsHTML}
+                `;
+                quizContainer.appendChild(questionElement);
+                questionNumber++;
+            });
+            // Reset question number for the next display
+            questionNumber = 1;
+        }
+
+        function calculateScore() {
+            let score = 0;
+            const wrongAnswers = [];
+            
+            shuffledQuizData.forEach((item, index) => {
+                const checkedOption = document.querySelector(`input[name="question${index}"]:checked`);
+                const userAnswer = checkedOption ? checkedOption.value : null;
+
+                if (userAnswer === item.answer) {
+                    score++;
+                } else {
+                    wrongAnswers.push({
+                        question: item.question,
+                        userAnswer: userAnswer || "Tidak dijawab",
+                        correctAnswer: item.answer
+                    });
+                }
+            });
+
+            displayResult(score, wrongAnswers);
+        }
+
+        function displayResult(score, wrongAnswers) {
+            quizContainer.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+
+            const totalQuestions = quizData.length;
+            const percentage = Math.round((score / totalQuestions) * 100);
+
+            const resultScore = document.getElementById('result-score');
+            const resultMessage = document.getElementById('result-message');
+            const resultTitle = document.getElementById('result-title');
+            const wrongAnswersContainer = document.getElementById('wrong-answers');
+            const reviewSection = document.getElementById('review-section');
+
+            resultScore.textContent = `${percentage}%`;
+
+            if (percentage >= 80) {
+                resultTitle.textContent = "Luar Biasa, Anda Berhasil!";
+                resultScore.className = "text-5xl font-bold mb-2 text-green-600";
+                resultMessage.textContent = `Anda menjawab ${score} dari ${totalQuestions} soal dengan benar. Pertahankan!`;
+            } else {
+                resultTitle.textContent = "Anda Gagal, Coba Lagi!";
+                resultScore.className = "text-5xl font-bold mb-2 text-red-600";
+                resultMessage.textContent = `Anda hanya menjawab ${score} dari ${totalQuestions} soal dengan benar. Teruslah berlatih!`;
+            }
+
+            if (wrongAnswers.length > 0) {
+                reviewSection.classList.remove('hidden');
+                wrongAnswersContainer.innerHTML = '';
+                wrongAnswers.forEach(item => {
+                    const answerElement = document.createElement('div');
+                    answerElement.className = 'p-4 bg-red-50 border border-red-200 rounded-lg';
+                    answerElement.innerHTML = `
+                        <p class="font-semibold">${item.question}</p>
+                        <p class="mt-2 text-sm">Jawaban Anda: <span class="font-medium incorrect">${item.userAnswer}</span></p>
+                        <p class="mt-1 text-sm">Jawaban Benar: <span class="font-medium correct">${item.correctAnswer}</span></p>
+                    `;
+                    wrongAnswersContainer.appendChild(answerElement);
+                });
+            } else {
+                reviewSection.classList.add('hidden');
+            }
+        }
+
+        submitBtn.addEventListener('click', calculateScore);
+        retryBtn.addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        // Tampilkan soal saat halaman dimuat
+        displayQuestions();
+    </script>
+</body>
+</html>
+
